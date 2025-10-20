@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Auditoría</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: #667eea;
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.05);
+            pointer-events: none;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .kpi-card.success {
+            background: #38ef7d;
+        }
+
+        .kpi-card.warning {
+            background: #ff4444;
+            color: white;
+        }
+
+        .kpi-card.alert {
+            background: #ff4444;
+            color: white;
+        }
+
+        .kpi-label {
+            font-size: 14px;
+            opacity: 0.95;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .kpi-value {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .kpi-meta {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e9ecef;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: #6c757d;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            position: relative;
+        }
+
+        .tab:hover {
+            color: #495057;
+            background: #f8f9fa;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            font-weight: 600;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .maintenance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .maintenance-item {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s ease;
+        }
+
+        .maintenance-item:hover {
+            transform: translateX(5px);
+        }
+
+        .maintenance-item.overdue {
+            border-left-color: #ff6b6b;
+            background: #fff5f5;
+        }
+
+        .maintenance-item.upcoming {
+            border-left-color: #ffd43b;
+        }
+
+        .maintenance-item.complete {
+            border-left-color: #51cf66;
+        }
+
+        .maintenance-item h4 {
+            font-size: 15px;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+
+        .maintenance-item p {
+            font-size: 13px;
+            color: #6c757d;
+            margin: 5px 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .status-badge.success {
+            background: #d3f9d8;
+            color: #2b8a3e;
+        }
+
+        .status-badge.warning {
+            background: #fff3bf;
+            color: #e67700;
+        }
+
+        .status-badge.danger {
+            background: #ffe3e3;
+            color: #c92a2a;
+        }
+
+        .checklist {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+            transition: background 0.2s ease;
+        }
+
+        .checklist-item:hover {
+            background: #f8f9fa;
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        .checkbox.checked {
+            color: #51cf66;
+            font-size: 24px;
+        }
+
+        .checkbox.unchecked {
+            color: #ff6b6b;
+            font-size: 24px;
+        }
+
+        .checklist-label {
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .metric-bar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .metric-bar h4 {
+            font-size: 13px;
+            color: #495057;
+            margin-bottom: 12px;
+        }
+
+        .bar-container {
+            background: #e9ecef;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            transition: width 1s ease;
+        }
+
+        .bar-fill.over {
+            background: linear-gradient(90deg, #ff6b6b 0%, #ee5a6f 100%);
+        }
+
+        .metric-values {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #868e96;
+        }
+
+        .disclosure {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #495057;
+            line-height: 1.6;
+        }
+
+        .disclosure strong {
+            color: #2c3e50;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section {
+            animation: fadeIn 0.6s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 GRAN RESERVA DE NAVARRA</h1>
+            <p>NIT: 900553566-4 | Período: Septiembre 2025 | Dashboard de Auditoría</p>
+        </div>
+
+        <div class="main-content">
+            <!-- KPIs Principales -->
+            <div class="kpi-grid">
+                <div class="kpi-card success">
+                    <div class="kpi-label">Administración Recaudada</div>
+                    <div class="kpi-value">132%</div>
+                    <div class="kpi-meta">Meta: ≥ 95% | ✓ Excedente</div>
+                </div>
+                <div class="kpi-card alert">
+                    <div class="kpi-label">Cartera > 90 días</div>
+                    <div class="kpi-value">40%</div>
+                    <div class="kpi-meta">Meta: ≤ 15% | ⚠️ Alerta crítica</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-label">Fondo Imprevistos</div>
+                    <div class="kpi-value">100%</div>
+                    <div class="kpi-meta">Meta: 100% | ✓ Cumplido</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-label">Índice Cobertura Operativa</div>
+                    <div class="kpi-value">1.4</div>
+                    <div class="kpi-meta">Meta: 1.0 | ✓ Excedente positivo</div>
+                </div>
+                <div class="kpi-card success">
+                    <div class="kpi-label">Excedente</div>
+                    <div class="kpi-value">$40.3M</div>
+                    <div class="kpi-meta">✓ Resultado positivo</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('financial')">📊 Financiero</button>
+                <button class="tab" onclick="showTab('maintenance')">🔧 Mantenimiento</button>
+                <button class="tab" onclick="showTab('contracts')">📄 Contratos y Documentos</button>
+                <button class="tab" onclick="showTab('security')">🔒 Seguridad y Operaciones</button>
+            </div>
+
+            <!-- Contenido Tab Financiero -->
+            <div id="financial" class="tab-content active">
+                <div class="section">
+                    <h3 class="section-title">💰 Cuentas por Pagar</h3>
+                    <div class="grid-2">
+                        <div class="chart-container">
+                            <canvas id="payablesChart"></canvas>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            <div style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                                <h4 style="font-size: 14px; color: #6c757d; margin-bottom: 10px;">Cuentas No Corrientes</h4>
+                                <p style="font-size: 28px; font-weight: 700; color: #667eea;">$0</p>
+                            </div>
+                            <div style="background: white; border-radius: 10px; padding: 20px; box-shadow: 0 3px 10px rgba(0,0,0,0.1);">
+                                <h4 style="font-size: 14px; color: #6c757d; margin-bottom: 10px;">Cuentas Corrientes</h4>
+                                <p style="font-size: 28px; font-weight: 700; color: #667eea;">$12,159,199</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3 class="section-title">📈 Top 3 Gastos Sobre-ejecutados (Acumulado al Corte)</h3>
+                    <div style="display: grid; gap: 15px;">
+                        <div class="metric-bar">
+                            <h4>Mantenimiento Puertas (123%)</h4>
+                            <div class="bar-container">
+                                <div class="bar-fill over" style="width: 100%;">123%</div>
+                            </div>
+                            <div class="metric-values">
+                                <span>Presupuestado: $4,723,000</span>
+                                <span>Ejecutado: $5,664,780</span>
+                            </div>
+                        </div>
+                        <div class="metric-bar">
+                            <h4>Mantenimiento Citofonía (133%)</h4>
+                            <div class="bar-container">
+                                <div class="bar-fill over" style="width: 100%;">133%</div>
+                            </div>
+                            <div class="metric-values">
+                                <span>Presupuestado: $2,400,000</span>
+                                <span>Ejecutado: $3,200,000</span>
+                            </div>
+                        </div>
+                        <div class="metric-bar">
+                            <h4>Mantenimiento Correctivo Puertas (120%)</h4>
+                            <div class="bar-container">
+                                <div class="bar-fill over" style="width: 100%;">120%</div>
+                            </div>
+                            <div class="metric-values">
+                                <span>Presupuestado: $9,000,000</span>
+                                <span>Ejecutado: $11,080,058</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido Tab Mantenimiento -->
+            <div id="maintenance" class="tab-content">
+                <div class="section">
+                    <h3 class="section-title">🔧 Estado de Certificaciones y Mantenimientos</h3>
+                    <div class="maintenance-grid">
+                        <div class="maintenance-item complete">
+                            <h4>🏗️ Ascensores certificados</h4>
+                            <p><strong>Total:</strong> 8/8</p>
+                            <p><strong>Estado:</strong> Vigente</p>
+                            <p><strong>Próximo vencimiento:</strong> Dic 2025</p>
+                            <span class="status-badge success">✓ Al día</span>
+                        </div>
+                        <div class="maintenance-item complete">
+                            <h4>🚪 Puerta peatonal</h4>
+                            <p><strong>Total:</strong> 1/1</p>
+                            <p><strong>Estado:</strong> Vigente</p>
+                            <p><strong>Próximo vencimiento:</strong> Dic 2025</p>
+                            <span class="status-badge success">✓ Al día</span>
+                        </div>
+                        <div class="maintenance-item complete">
+                            <h4>🚗 Puerta sótano</h4>
+                            <p><strong>Total:</strong> 1/1</p>
+                            <p><strong>Estado:</strong> Vigente</p>
+                            <p><strong>Próximo vencimiento:</strong> Dic 2025</p>
+                            <span class="status-badge success">✓ Al día</span>
+                        </div>
+                        <div class="maintenance-item overdue">
+                            <h4>🔥 Pruebas pitométricas</h4>
+                            <p><strong>Estado:</strong> Pendiente</p>
+                            <span class="status-badge danger">⚠️ Pendiente</span>
+                        </div>
+                        <div class="maintenance-item overdue">
+                            <h4>⚓ Anclajes certificados</h4>
+                            <p><strong>Estado:</strong> Pendiente</p>
+                            <span class="status-badge danger">⚠️ Pendiente</span>
+                        </div>
+                        <div class="maintenance-item overdue">
+                            <h4>🚰 Lavado de tanques</h4>
+                            <p><strong>Total:</strong> 1/1</p>
+                            <p><strong>Estado:</strong> Pendiente</p>
+                            <span class="status-badge danger">⚠️ Pendiente</span>
+                        </div>
+                        <div class="maintenance-item complete">
+                            <h4>📊 Avalúo zonas comunes</h4>
+                            <p><strong>Último:</strong> Abr 2024</p>
+                            <p><strong>Próximo:</strong> Abr 2026</p>
+                            <span class="status-badge success">✓ Al día</span>
+                        </div>
+                        <div class="maintenance-item complete">
+                            <h4>🧯 Extintores</h4>
+                            <p><strong>Próximo vencimiento:</strong> Jul 2026</p>
+                            <span class="status-badge success">✓ Al día</span>
+                        </div>
+                        <div class="maintenance-item complete">
+                            <h4>📋 Reporte estándares SGSST</h4>
+                            <p><strong>Próximo:</strong> Ene 2026</p>
+                            <span class="status-badge success">✓ Al día</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido Tab Contratos y Documentos -->
+            <div id="contracts" class="tab-content">
+                <div class="section">
+                    <h3 class="section-title">📄 Contratos y Documentos</h3>
+                    <div style="background: #fff5f5; border-radius: 10px; padding: 25px; margin-bottom: 20px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); border-left: 4px solid #ff6b6b;">
+                        <h4 style="font-size: 16px; color: #6c757d; margin-bottom: 15px;">⚠️ Gastos Pendientes por Soportar</h4>
+                        <p style="font-size: 32px; font-weight: 700; color: #ff6b6b; margin-bottom: 10px;">$569,260</p>
+                        <p style="font-size: 13px; color: #868e96;">Requiere revisión y soporte documental</p>
+                    </div>
+                    
+                    <div class="checklist">
+                        <h4 style="font-size: 16px; color: #2c3e50; margin-bottom: 15px; padding: 0 12px;">Estado de Formalización</h4>
+                        <div class="checklist-item">
+                            <span class="checkbox unchecked">⚠️</span>
+                            <span class="checklist-label"><strong>Representación Legal:</strong> Pendiente acta de nombramiento para iniciar trámite ante la alcaldía</span>
+                        </div>
+                        <div class="checklist-item">
+                            <span class="checkbox checked">✓</span>
+                            <span class="checklist-label"><strong>Actas reunión de Consejo 2025 firmadas:</strong> 33/33 - Última firmada: #21 de octubre 09</span>
+                        </div>
+                        <div class="checklist-item">
+                            <span class="checkbox unchecked">⚠️</span>
+                            <span class="checklist-label"><strong>Reembolsos sin firmas:</strong> 1 pendiente</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenido Tab Seguridad -->
+            <div id="security" class="tab-content">
+                <div class="section">
+                    <h3 class="section-title">🔒 Checklist de Seguridad y Operaciones</h3>
+                    <div class="checklist">
+                        <div class="checklist-item">
+                            <span class="checkbox unchecked">⚠️</span>
+                            <span class="checklist-label"><strong>Cámaras Operantes:</strong> 72/79 (91%)</span>
+                        </div>
+                        <div class="checklist-item">
+                            <span class="checkbox checked">✓</span>
+                            <span class="checklist-label">Racks Asegurados</span>
+                        </div>
+                        <div class="checklist-item">
+                            <span class="checkbox checked">✓</span>
+                            <span class="checklist-label">Cerca Perimetral Operante</span>
+                        </div>
+                        <div class="checklist-item">
+                            <span class="checkbox unchecked">⚠️</span>
+                            <span class="checklist-label"><strong>Planillas de seguridad pendientes:</strong> 1</span>
+                        </div>
+                        <div class="checklist-item">
+                            <span class="checkbox checked">✓</span>
+                            <span class="checklist-label">Pago oportuno de servicios públicos</span>
+                        </div>
+                        <div class="checklist-item">
+                            <span class="checkbox checked">✓</span>
+                            <span class="checklist-label">Pago oportuno de impuestos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="disclosure">
+                <strong>📌 Disclaimer:</strong> Este Dashboard es una herramienta de control creada por iniciativa de la Revisoría Fiscal, cuyo propósito es facilitar información temprana de las principales alertas para seguimiento de la Administración (Consejo y Administrador). Se comparte con la Administración como una sinergia para fortalecer el control interno. La integridad de los datos presentados depende de la información suministrada oportunamente por la Administración. Esta herramienta es de carácter consultivo y no reemplaza los soportes originales como documentos fuente oficiales.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Función para cambiar tabs
+        function showTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Gráfico de Cuentas por Pagar
+        const ctx = document.getElementById('payablesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Corrientes'],
+                datasets: [{
+                    data: [12159],
+                    backgroundColor: [
+                        'rgba(118, 75, 162, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(118, 75, 162, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.parsed || 0;
+                                return label + ': $' + (value * 1000).toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Animación de las barras al cargar
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const bars = document.querySelectorAll('.bar-fill');
+                bars.forEach(bar => {
+                    const width = bar.style.width;
+                    bar.style.width = '0%';
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 100);
+                });
+            }, 300);
+        });
+    </script>
+</body>
+</html>
