@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Auditoría</title>
+    <!-- 
+    ==========================================
+    © 2025 TODOS LOS DERECHOS RESERVADOS
+    Este código es propiedad exclusiva del desarrollador
+    Su uso, copia o distribución no autorizada está prohibida
+    Violaciones serán perseguidas legalmente
+    ==========================================
+    -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -358,6 +366,29 @@
         .disclosure strong {
             color: #2c3e50;
         }
+        
+        /* Marca de agua de protección */
+        body::before {
+            content: '© Dashboard Protegido';
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            color: rgba(0, 0, 0, 0.03);
+            z-index: 9999;
+            pointer-events: none;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+        
+        /* Deshabilitar selección de texto */
+        body {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
 
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -522,7 +553,7 @@
                         </div>
                         <div class="maintenance-item complete">
                             <h4>🧯 Extintores</h4>
-                            <p><strong>Próximo vencimiento:</strong> Jul 2026</p>
+                            <p><strong>Próximo vencimiento:</strong> Oct 2026</p>
                             <span class="status-badge success">✓ Al día</span>
                         </div>
                         <div class="maintenance-item complete">
@@ -568,8 +599,8 @@
                     <h3 class="section-title">🔒 Checklist de Seguridad y Operaciones</h3>
                     <div class="checklist">
                         <div class="checklist-item">
-                            <span class="checkbox unchecked">⚠️</span>
-                            <span class="checklist-label"><strong>Cámaras Operantes:</strong> 72/79 (91%)</span>
+                            <span class="checkbox checked">✓</span>
+                            <span class="checklist-label"><strong>Cámaras Operantes:</strong> 72/72 (100%)</span>
                         </div>
                         <div class="checklist-item">
                             <span class="checkbox checked">✓</span>
@@ -598,11 +629,77 @@
             <!-- Disclaimer -->
             <div class="disclosure">
                 <strong>📌 Disclaimer:</strong> Este Dashboard es una herramienta de control creada por iniciativa de la Revisoría Fiscal, cuyo propósito es facilitar información temprana de las principales alertas para seguimiento de la Administración (Consejo y Administrador). Se comparte con la Administración como una sinergia para fortalecer el control interno. La integridad de los datos presentados depende de la información suministrada oportunamente por la Administración. Esta herramienta es de carácter consultivo y no reemplaza los soportes originales como documentos fuente oficiales.
+                <br><br>
+                <strong>© 2025 Todos los derechos reservados.</strong> Este dashboard y su código fuente están protegidos por derechos de autor. Queda prohibida su reproducción, distribución, modificación o uso no autorizado sin el consentimiento expreso por escrito del propietario.
             </div>
         </div>
     </div>
 
     <script>
+        // ==========================================
+        // © 2025 TODOS LOS DERECHOS RESERVADOS
+        // Este código es propiedad exclusiva del desarrollador
+        // Su uso, copia o distribución no autorizada está prohibida
+        // ==========================================
+        
+        // Protección contra copia - Deshabilitar click derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            alert('⚠️ Contenido protegido por derechos de autor');
+            return false;
+        });
+        
+        // Deshabilitar teclas de inspección
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === 'F12') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+I (Inspector)
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+J (Consola)
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+U (Ver código fuente)
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+C (Selector)
+            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                return false;
+            }
+        });
+        
+        // Detectar si se abre DevTools
+        const devtools = { isOpen: false };
+        const threshold = 160;
+        
+        setInterval(function() {
+            if (window.outerWidth - window.innerWidth > threshold || 
+                window.outerHeight - window.innerHeight > threshold) {
+                if (!devtools.isOpen) {
+                    devtools.isOpen = true;
+                    alert('⚠️ Herramientas de desarrollador detectadas. Este contenido está protegido.');
+                }
+            } else {
+                devtools.isOpen = false;
+            }
+        }, 500);
+        
+        // Deshabilitar selección de texto
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
         // Función para cambiar tabs
         function showTab(tabName) {
             const tabs = document.querySelectorAll('.tab');
